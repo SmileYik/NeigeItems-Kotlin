@@ -61,7 +61,7 @@ public class ItemArgumentType implements ArgumentType<ItemSelector> {
             @NotNull SuggestionsBuilder builder
     ) {
         String lowerCaseRemaining = builder.getRemaining().toLowerCase();
-        ItemManager.INSTANCE.getItems().keySet().forEach((id) -> {
+        ItemManager.INSTANCE.itemIds().forEach((id) -> {
             if (id.toLowerCase().startsWith(lowerCaseRemaining)) {
                 builder.suggest(id);
             }

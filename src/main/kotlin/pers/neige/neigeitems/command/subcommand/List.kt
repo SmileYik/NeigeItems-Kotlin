@@ -38,7 +38,7 @@ object List {
                 list(context.source, getInteger(context, "page"))
                 1
             }.suggests { _, builder ->
-                for (i in 1..ceil(ItemManager.itemAmount.toDouble() / ConfigManager.config.getDouble("ItemList.ItemAmount")).toInt()) {
+                for (i in 1..ceil(ItemManager.itemAmount().toDouble() / ConfigManager.config.getDouble("ItemList.ItemAmount")).toInt()) {
                     builder.suggest(i.toString())
                 }
                 builder.buildFuture()
@@ -61,7 +61,7 @@ object List {
         page: Int
     ) {
         val pageAmount =
-            ceil(ItemManager.itemAmount.toDouble() / ConfigManager.config.getDouble("ItemList.ItemAmount")).toInt()
+            ceil(ItemManager.itemAmount().toDouble() / ConfigManager.config.getDouble("ItemList.ItemAmount")).toInt()
         val realPage = page.coerceAtMost(pageAmount).coerceAtLeast(1)
         // 发送前缀
         ConfigManager.config.getString("ItemList.Prefix")?.let { sender.sendMessage(it) }
@@ -71,8 +71,8 @@ object List {
         val prevItemAmount = ((realPage - 1) * ConfigManager.config.getInt("ItemList.ItemAmount")) + 1
         // 逐个获取物品
         for (index in (prevItemAmount until prevItemAmount + ConfigManager.config.getInt("ItemList.ItemAmount"))) {
-            if (index == ItemManager.itemIds.size + 1) break
-            val id = ItemManager.itemIds[index - 1]
+            if (index == ItemManager.itemIds().size + 1) break
+            val id = ItemManager.itemIds()[index - 1]
             // 替换信息内变量
             var listItemMessage = (ConfigManager.config.getString("ItemList.ItemFormat") ?: "")
                 .replace("{index}", index.toString())

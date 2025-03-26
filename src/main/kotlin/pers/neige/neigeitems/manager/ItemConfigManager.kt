@@ -18,22 +18,22 @@ open class ItemConfigManager(val plugin: JavaPlugin = NeigeItems.getInstance(), 
     /**
      * 获取全部物品文件
      */
-    val files: ArrayList<File> = getAllFiles(plugin, dir)
+    protected val files: ArrayList<File> = getAllFiles(plugin, dir)
 
     /**
      * 获取全部物品基础配置
      */
-    val itemConfigs: ConcurrentHashMap<String, ItemConfig> = ConcurrentHashMap<String, ItemConfig>()
+    protected val itemConfigs: ConcurrentHashMap<String, ItemConfig> = ConcurrentHashMap<String, ItemConfig>()
 
     /**
      * 获取全部物品ID(已排序)
      */
-    val itemIds get() = itemConfigs.keys.toList().sorted()
+    protected val itemIds get() = itemConfigs.keys.toList().sorted()
 
     /**
      * 获取全部物品ID(未排序)
      */
-    val itemIdsRaw get() = itemConfigs.keys.toList()
+    protected val itemIdsRaw get() = itemConfigs.keys.toList()
 
     init {
         // 初始化物品配置
@@ -69,5 +69,17 @@ open class ItemConfigManager(val plugin: JavaPlugin = NeigeItems.getInstance(), 
         itemConfigs.clear()
         files.addAll(getAllFiles(plugin, dir))
         loadItemConfigs()
+    }
+
+    fun files(): ArrayList<File> {
+        return files
+    }
+
+    fun itemIds(): List<String> {
+        return itemIds
+    }
+
+    fun itemIdsRaw(): List<String> {
+        return itemIdsRaw
     }
 }

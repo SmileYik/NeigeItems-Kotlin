@@ -34,19 +34,20 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @constructor 构建物品管理器
  */
-object ItemManager : ItemConfigManager() {
-    @JvmStatic
+object ItemManager : ItemConfigManager(), IItemManager {
     private val logger = LoggerFactory.getLogger(ItemManager::class.java.simpleName)
 
     /**
      * 获取所有物品生成器
      */
-    val items: ConcurrentHashMap<String, ItemGenerator> = ConcurrentHashMap<String, ItemGenerator>()
+    private val items: ConcurrentHashMap<String, ItemGenerator> = ConcurrentHashMap<String, ItemGenerator>()
 
     /**
      * 获取物品总数
      */
-    val itemAmount get() = itemIds.size
+    override fun itemAmount(): Int {
+        return items.size
+    }
 
     private val nullHashMap: HashMap<String, String>? = null
 
@@ -85,7 +86,7 @@ object ItemManager : ItemConfigManager() {
     /**
      * 重载物品管理器
      */
-    fun reload() {
+    override fun reload() {
         reloadItemConfigs()
         items.clear()
         loadItems()
@@ -97,7 +98,7 @@ object ItemManager : ItemConfigManager() {
      * @param id 物品ID
      * @return 物品原始Config的克隆
      */
-    fun getOriginConfig(id: String): ConfigurationSection? {
+    override fun getOriginConfig(id: String): ConfigurationSection? {
         return itemConfigs[id]?.configSection?.clone()
     }
 
@@ -107,7 +108,7 @@ object ItemManager : ItemConfigManager() {
      * @param id 物品ID
      * @return 物品原始Config
      */
-    fun getRealOriginConfig(id: String): ConfigurationSection? {
+    override fun getRealOriginConfig(id: String): ConfigurationSection? {
         return itemConfigs[id]?.configSection
     }
 
@@ -117,7 +118,7 @@ object ItemManager : ItemConfigManager() {
      * @param id 物品ID
      * @return 物品生成器
      */
-    fun getItem(id: String): ItemGenerator? {
+    override fun getItem(id: String): ItemGenerator? {
         return items[id]
     }
 
@@ -127,7 +128,7 @@ object ItemManager : ItemConfigManager() {
      * @param id 物品ID
      * @return 物品
      */
-    fun getItemStack(id: String): ItemStack? {
+    override fun getItemStack(id: String): ItemStack? {
         return getItemStack(id, null, nullHashMap)
     }
 
@@ -138,7 +139,7 @@ object ItemManager : ItemConfigManager() {
      * @param player 用于解析物品的玩家
      * @return 物品
      */
-    fun getItemStack(id: String, player: OfflinePlayer?): ItemStack? {
+    override fun getItemStack(id: String, player: OfflinePlayer?): ItemStack? {
         return getItemStack(id, player, nullHashMap)
     }
 
@@ -149,7 +150,7 @@ object ItemManager : ItemConfigManager() {
      * @param data 用于解析物品的指向数据
      * @return 物品
      */
-    fun getItemStack(id: String, data: String?): ItemStack? {
+    override fun getItemStack(id: String, data: String?): ItemStack? {
         return getItemStack(id, null, data)
     }
 
@@ -160,7 +161,7 @@ object ItemManager : ItemConfigManager() {
      * @param data 用于解析物品的指向数据
      * @return 物品
      */
-    fun getItemStack(id: String, data: MutableMap<String, String>?): ItemStack? {
+    override fun getItemStack(id: String, data: MutableMap<String, String>?): ItemStack? {
         return getItemStack(id, null, data)
     }
 
@@ -172,7 +173,7 @@ object ItemManager : ItemConfigManager() {
      * @param data 用于解析物品的指向数据
      * @return 物品
      */
-    fun getItemStack(id: String, player: OfflinePlayer?, data: String?): ItemStack? {
+    override fun getItemStack(id: String, player: OfflinePlayer?, data: String?): ItemStack? {
         return items[id]?.getItemStack(player, data)
     }
 
@@ -184,7 +185,7 @@ object ItemManager : ItemConfigManager() {
      * @param data 用于解析物品的指向数据
      * @return 物品
      */
-    fun getItemStack(id: String, player: OfflinePlayer?, data: MutableMap<String, String>?): ItemStack? {
+    override fun getItemStack(id: String, player: OfflinePlayer?, data: MutableMap<String, String>?): ItemStack? {
         return items[id]?.getItemStack(player, data)
     }
 
@@ -195,14 +196,8 @@ object ItemManager : ItemConfigManager() {
      * @param id 物品ID
      * @return 是否存在对应ID的物品
      */
-    fun hasItem(id: String): Boolean {
+    override fun hasItem(id: String): Boolean {
         return items.containsKey(id)
-    }
-
-    enum class SaveResult {
-        SUCCESS,
-        AIR,
-        CONFLICT
     }
 
     /**
@@ -215,18 +210,18 @@ object ItemManager : ItemConfigManager() {
      * @param cover 是否覆盖
      * @return 保存结果
      */
-    fun saveItem(itemStack: ItemStack?, id: String, file: File, config: YamlConfiguration, cover: Boolean): SaveResult {
+    override fun saveItem(itemStack: ItemStack?, id: String, file: File, config: YamlConfiguration, cover: Boolean): IItemManager.SaveResult {
         // 检测是否为空气
-        if (itemStack == null || itemStack.type == Material.AIR) return SaveResult.AIR
+        if (itemStack == null || itemStack.type == Material.AIR) return IItemManager.SaveResult.AIR
         // 检测节点是否存在
-        if (hasItem(id) && !cover) return SaveResult.CONFLICT
+        if (hasItem(id) && !cover) return IItemManager.SaveResult.CONFLICT
         // 创建物品节点
         config.set(id, nmsHooker.save(itemStack))
         // 保存文件
         config.save(file)
         // 物品保存好了, 信息加进ItemManager里
         addItem(ItemGenerator(ItemConfig(id, file, config)))
-        return SaveResult.SUCCESS
+        return IItemManager.SaveResult.SUCCESS
     }
 
     /**
@@ -238,7 +233,7 @@ object ItemManager : ItemConfigManager() {
      * @param cover 是否覆盖
      * @return 保存结果
      */
-    fun saveItem(itemStack: ItemStack, id: String, path: String = "$id.yml", cover: Boolean): SaveResult {
+    override fun saveItem(itemStack: ItemStack, id: String, path: String, cover: Boolean): IItemManager.SaveResult {
         val file = getFileOrCreate("Items${File.separator}$path")
         val config = YamlConfiguration.loadConfiguration(file)
         return saveItem(itemStack, id, file, config, cover)
@@ -249,7 +244,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @return NI物品信息, 非NI物品返回null
      */
-    fun isNiItem(itemStack: ItemStack?): ItemInfo? {
+    override fun isNiItem(itemStack: ItemStack?): ItemInfo? {
         return itemStack.isNiItem(false)
     }
 
@@ -259,7 +254,7 @@ object ItemManager : ItemConfigManager() {
      * @param parseData 是否将data解析为HashMap
      * @return NI物品信息, 非NI物品返回null
      */
-    fun isNiItem(itemStack: ItemStack?, parseData: Boolean): ItemInfo? {
+    override fun isNiItem(itemStack: ItemStack?, parseData: Boolean): ItemInfo? {
         return itemStack.isNiItem(parseData)
     }
 
@@ -268,7 +263,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @return NI物品ID, 非NI物品返回null
      */
-    fun getItemId(itemStack: ItemStack?): String? {
+    override fun getItemId(itemStack: ItemStack?): String? {
         return itemStack.getItemId()
     }
 
@@ -277,8 +272,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 使用次数
      */
-    @JvmStatic
-    fun ItemStack.setCharge(amount: Int) {
+    override fun ItemStack.setCharge(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的使用次数
@@ -296,8 +290,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 添加量(可为负)
      */
-    @JvmStatic
-    fun ItemStack.addCharge(amount: Int) {
+    override fun ItemStack.addCharge(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的使用次数
@@ -324,8 +317,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 最大使用次数
      */
-    @JvmStatic
-    fun ItemStack.setMaxCharge(amount: Int) {
+    override fun ItemStack.setMaxCharge(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的使用次数
@@ -343,8 +335,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 添加量(可为负)
      */
-    @JvmStatic
-    fun ItemStack.addMaxCharge(amount: Int) {
+    override fun ItemStack.addMaxCharge(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的使用次数
@@ -364,8 +355,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 耐久值
      */
-    @JvmStatic
-    fun ItemStack.setCustomDurability(amount: Int) {
+    override fun ItemStack.setCustomDurability(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的自定义耐久
@@ -392,8 +382,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 添加量(可为负)
      */
-    @JvmStatic
-    fun ItemStack.addCustomDurability(amount: Int) {
+    override fun ItemStack.addCustomDurability(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的自定义耐久
@@ -422,8 +411,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 最大耐久值
      */
-    @JvmStatic
-    fun ItemStack.setMaxCustomDurability(amount: Int) {
+    override fun ItemStack.setMaxCustomDurability(amount: Int) {
         // 限制下限
         val realAmount = amount.coerceAtLeast(1)
         // 直掏NBT
@@ -444,8 +432,7 @@ object ItemManager : ItemConfigManager() {
      *
      * @param amount 添加量(可为负)
      */
-    @JvmStatic
-    fun ItemStack.addMaxCustomDurability(amount: Int) {
+    override fun ItemStack.addMaxCustomDurability(amount: Int) {
         // 直掏NBT
         val directTag = this.getDirectTag() ?: return
         // 不是NI物品还加个屁的自定义耐久
@@ -468,8 +455,7 @@ object ItemManager : ItemConfigManager() {
      * @param max 当前最大自定义耐久
      * @return 对应的原版损伤值
      */
-    @JvmStatic
-    fun ItemStack.checkDurability(current: Int, max: Int): Short {
+    override fun ItemStack.checkDurability(current: Int, max: Int): Short {
         // 耐久百分比
         val p = current.toDouble() / max
         // 损伤值百分比
@@ -493,8 +479,7 @@ object ItemManager : ItemConfigManager() {
      * @param current 当前自定义耐久
      * @param max 当前最大自定义耐久
      */
-    @JvmStatic
-    fun ItemStack.refreshDurability(current: Int, max: Int) {
+    override fun ItemStack.refreshDurability(current: Int, max: Int) {
         this.setDamage(this.checkDurability(current, max))
     }
 
@@ -504,8 +489,7 @@ object ItemManager : ItemConfigManager() {
      * @param player 用于重构物品的玩家
      * @param sections 重构节点(值为null代表刷新该节点)
      */
-    @JvmStatic
-    fun ItemStack.rebuild(player: OfflinePlayer, sections: MutableMap<String, String?>): Boolean {
+    override fun ItemStack.rebuild(player: OfflinePlayer, sections: MutableMap<String, String?>): Boolean {
         return rebuild(player, sections, null)
     }
 
@@ -517,8 +501,7 @@ object ItemManager : ItemConfigManager() {
      * @param protectNBT 需要保护的NBT(重构后不刷新), 可以填null
      * @return 物品是空气时返回false, 其余情况返回true
      */
-    @JvmStatic
-    fun ItemStack.rebuild(
+    override fun ItemStack.rebuild(
         player: OfflinePlayer, sections: MutableMap<String, String?>, protectNBT: List<String>?
     ): Boolean {
         // 判断是不是空气
@@ -547,8 +530,7 @@ object ItemManager : ItemConfigManager() {
      * @param protectNBT 需要保护的NBT(重构后不刷新), 可以填null
      * @return 物品是空气时返回false, 其余情况返回true
      */
-    @JvmStatic
-    fun ItemStack.rebuild(
+    override fun ItemStack.rebuild(
         player: OfflinePlayer, protectSections: List<String>, protectNBT: List<String>?
     ): Boolean {
         // 判断是不是空气
@@ -612,8 +594,8 @@ object ItemManager : ItemConfigManager() {
      * @param forceUpdate 是否忽略检测, 强制更新物品
      * @param sendMessage 更新后是否向玩家发送更新提示文本
      */
-    fun update(
-        player: Player, itemStack: ItemStack, forceUpdate: Boolean = false, sendMessage: Boolean = false
+    override fun update(
+        player: Player, itemStack: ItemStack, forceUpdate: Boolean, sendMessage: Boolean
     ) {
         val itemInfo = itemStack.isNiItem() ?: return
         val neigeItems = itemInfo.neigeItems

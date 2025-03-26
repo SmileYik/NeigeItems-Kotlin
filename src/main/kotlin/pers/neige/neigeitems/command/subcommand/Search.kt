@@ -43,7 +43,7 @@ object Search {
                     1
                 }.suggests { context, builder ->
                     for (i in 1..ceil(
-                        ItemManager.itemIds.filter { id ->
+                        ItemManager.itemIds().filter { id ->
                             id.startsWith(getUnquotedString(context, "prefix"))
                         }.size.toDouble() / ConfigManager.config.getDouble(
                             "ItemList.ItemAmount"
@@ -74,7 +74,7 @@ object Search {
         // 页码
         page: Int
     ) {
-        val ids = ItemManager.itemIds.filter { id -> id.startsWith(idPrefix) }
+        val ids = ItemManager.itemIds().filter { id -> id.startsWith(idPrefix) }
         val pageAmount = ceil(ids.size.toDouble() / ConfigManager.config.getDouble("ItemList.ItemAmount")).toInt()
         val realPage = page.coerceAtMost(pageAmount).coerceAtLeast(1)
         // 发送前缀

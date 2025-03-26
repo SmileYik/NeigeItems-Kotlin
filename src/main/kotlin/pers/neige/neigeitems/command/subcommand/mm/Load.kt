@@ -13,6 +13,7 @@ import pers.neige.neigeitems.command.arguments.UnquotedStringArgumentType.getUnq
 import pers.neige.neigeitems.command.arguments.UnquotedStringArgumentType.string
 import pers.neige.neigeitems.manager.ConfigManager
 import pers.neige.neigeitems.manager.HookerManager.mythicMobsHooker
+import pers.neige.neigeitems.manager.IItemManager
 import pers.neige.neigeitems.manager.ItemManager
 import pers.neige.neigeitems.utils.ConfigUtils.getFileOrCreate
 import pers.neige.neigeitems.utils.ItemUtils.getName
@@ -101,7 +102,7 @@ object Load {
         async {
             when (ItemManager.saveItem(itemStack, id, file, config, cover)) {
                 // 保存成功
-                ItemManager.SaveResult.SUCCESS -> {
+                IItemManager.SaveResult.SUCCESS -> {
                     sender.sendLang(
                         "Messages.successSaveInfo", mapOf(
                             Pair("{name}", itemStack.getName()),
@@ -111,7 +112,7 @@ object Load {
                     )
                 }
                 // 已存在对应ID物品
-                ItemManager.SaveResult.CONFLICT -> {
+                IItemManager.SaveResult.CONFLICT -> {
                     if (cover) return@async
                     sender.sendLang(
                         "Messages.existedKey", mapOf(
@@ -120,7 +121,7 @@ object Load {
                     )
                 }
                 // 你保存了个空气
-                ItemManager.SaveResult.AIR -> sender.sendLang("Messages.airItem")
+                IItemManager.SaveResult.AIR -> sender.sendLang("Messages.airItem")
             }
         }
     }

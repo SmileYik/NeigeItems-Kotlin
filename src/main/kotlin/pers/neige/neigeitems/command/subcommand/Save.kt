@@ -12,6 +12,7 @@ import pers.neige.neigeitems.command.arguments.FileNameArgumentType.getFileName
 import pers.neige.neigeitems.command.arguments.ItemArgumentType.item
 import pers.neige.neigeitems.command.arguments.UnquotedStringArgumentType.getUnquotedString
 import pers.neige.neigeitems.command.arguments.UnquotedStringArgumentType.string
+import pers.neige.neigeitems.manager.IItemManager
 import pers.neige.neigeitems.manager.ItemManager
 import pers.neige.neigeitems.utils.ItemUtils.getName
 import pers.neige.neigeitems.utils.LangUtils.sendLang
@@ -53,7 +54,7 @@ object Save {
         async {
             when (ItemManager.saveItem(itemStack, id, path, cover)) {
                 // 保存成功
-                ItemManager.SaveResult.SUCCESS -> {
+                IItemManager.SaveResult.SUCCESS -> {
                     sender.sendLang(
                         "Messages.successSaveInfo", mapOf(
                             Pair("{name}", itemStack.getName()),
@@ -63,12 +64,12 @@ object Save {
                     )
                 }
                 // 已存在对应ID物品
-                ItemManager.SaveResult.CONFLICT -> {
+                IItemManager.SaveResult.CONFLICT -> {
                     if (cover) return@async
                     sender.sendLang("Messages.existedKey", mapOf(Pair("{itemID}", id)))
                 }
                 // 你保存了个空气
-                ItemManager.SaveResult.AIR -> sender.sendLang("Messages.airItem")
+                IItemManager.SaveResult.AIR -> sender.sendLang("Messages.airItem")
             }
         }
     }

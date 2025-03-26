@@ -84,7 +84,7 @@ object SectionManager {
                         return@syncLater
                     }
                 }
-                for (file: File in ItemManager.files) {
+                for (file: File in ItemManager.files()) {
                     // 仅加载.yml文件
                     if (!file.name.endsWith(".yml")) continue
                     val text = file.readText()
